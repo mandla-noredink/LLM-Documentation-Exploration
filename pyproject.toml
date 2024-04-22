@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "llm-documentation-explorer"
+version = "0.1.0"
+description = "For exploring documentation on dropbox using LLMs"
+authors = ["Mandla Moyo <mandla@noredink.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+dropbox = "^11.36.2"
+langchain = "^0.1.16"
+openai = "^1.23.2"
+ipykernel = "^6.29.4"
+setuptools = "^69.5.1"
+streamlit = "^1.33.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
