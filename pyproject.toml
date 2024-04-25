@@ -7,7 +7,7 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.11,<3.12"
 dropbox = "^11.36.2"
 langchain = "^0.1.16"
 openai = "^1.23.2"
@@ -16,6 +16,9 @@ setuptools = "^69.5.1"
 streamlit = "^1.33.0"
 faiss-cpu = "^1.8.0"
 tiktoken = "^0.6.0"
+langchain-nomic = "^0.0.2"
+unstructured = "^0.13.3"
+markdown = "^3.6"
 
 
 [build-system]
