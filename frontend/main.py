@@ -6,10 +6,6 @@ import json
 import sseclient
 
 
-class Domain(Enum):
-    FIRES = "fires"
-
-
 class Mode(Enum):
     CHATBOT = "query"
     DOC_SEARCH = "search"
@@ -124,7 +120,6 @@ score_threshold = None
 with st.sidebar:
     st.subheader("The Power of NRI Docs in the Palm of Your Hand")
     st.header("Settings")
-    domain = st.radio("Topic Domain", options=["Fires"])
     mode = st.radio("Search Mode", options=["Chatbot", "Doc Search"])
     active_mode = enum_from_str(Mode, mode) or DEFAULT_MODE
 
