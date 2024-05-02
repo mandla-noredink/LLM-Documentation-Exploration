@@ -1,12 +1,11 @@
-from fastapi import FastAPI, Request, Response
-from starlette.background import BackgroundTask
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from pydantic import BaseModel
-import logging
 
-from retriever import ChatRequest, answer_chain, search_chain
+from retriever import answer_chain, search_chain
 
+# import logging
 # logging.basicConfig(filename='info.log', level=logging.DEBUG)
 
 
@@ -14,8 +13,10 @@ from retriever import ChatRequest, answer_chain, search_chain
 #     logging.info(req_body)
 #     logging.info(res_body)
 
+
 class Query(BaseModel):
     question: str
+
 
 app = FastAPI()
 
@@ -51,9 +52,9 @@ add_routes(
 #     res_body = b''
 #     async for chunk in response.body_iterator:
 #         res_body += chunk
-    
+
 #     task = BackgroundTask(log_info, req_body, res_body)
-#     return Response(content=res_body, status_code=response.status_code, 
+#     return Response(content=res_body, status_code=response.status_code,
 #         headers=dict(response.headers), media_type=response.media_type, background=task)
 
 

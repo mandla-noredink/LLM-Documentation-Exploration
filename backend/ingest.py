@@ -49,7 +49,11 @@ def get_embeddings():
 
 def ingest_docs(documents):
     embeddings = get_embeddings()
-    return FAISS.from_documents(documents, embeddings, normalize_L2=True)
+    return FAISS.from_documents(
+        documents,
+        embeddings,
+        normalize_L2=True,
+    )
 
 
 def build_vector_store():
@@ -63,7 +67,10 @@ def build_vector_store():
 def load_vector_store():
     embeddings = get_embeddings()
     return FAISS.load_local(
-        settings.vector_store_path, embeddings, allow_dangerous_deserialization=True
+        settings.vector_store_path,
+        embeddings,
+        allow_dangerous_deserialization=True,
+        normalize_L2=True,
     )
 
 
