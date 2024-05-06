@@ -36,11 +36,13 @@ def message_index(active_mode: Mode) -> int:
 
 def get_payload(params: dict) -> dict:
     return {
-        "metadata": {
-            "app_id": settings.app_id,
-            "environment": settings.environment,
+        "config": {
+            "metadata": {
+                "app_id": settings.app_id,
+                "environment": settings.environment,
+            }
         },
-        "input": filter_none_values(params)
+        "input": filter_none_values(params),
     }
 
 def get_search_results(
