@@ -16,14 +16,13 @@ class Query(BaseModel):
 class SendFeedbackBody(BaseModel):
     run_id: UUID
     key: str = "user_score"
+    score: Union[float, int, bool]
 
-    score: Union[float, int, bool, None] = None
     feedback_id: Optional[UUID] = None
     comment: Optional[str] = None
 
 
 client = Client()
-
 app = FastAPI()
 
 # Set all CORS enabled origins
@@ -61,11 +60,6 @@ async def send_feedback(body: SendFeedbackBody):
         feedback_id=body.feedback_id,
     )
     return {"result": "posted feedback successfully", "code": 200}
-
-
-@app.get("/test")
-async def search():
-    return {"message": "Beep boop doing a search.."}
 
 
 if __name__ == "__main__":
