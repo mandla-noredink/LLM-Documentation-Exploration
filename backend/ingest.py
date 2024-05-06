@@ -1,13 +1,13 @@
-from langchain_community.document_loaders.markdown import UnstructuredMarkdownLoader
-from langchain_community.document_loaders.directory import DirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter, Language
-from langchain.embeddings import CacheBackedEmbeddings
-from langchain_community.vectorstores.faiss import FAISS
-from langchain.storage import LocalFileStore
-from langchain.embeddings.ollama import OllamaEmbeddings
-
 import shutil
 
+from langchain.embeddings import CacheBackedEmbeddings
+from langchain.embeddings.ollama import OllamaEmbeddings
+from langchain.storage import LocalFileStore
+from langchain.text_splitter import Language, RecursiveCharacterTextSplitter
+from langchain_community.document_loaders.directory import DirectoryLoader
+from langchain_community.document_loaders.markdown import \
+    UnstructuredMarkdownLoader
+from langchain_community.vectorstores.faiss import FAISS
 from settings import settings
 
 

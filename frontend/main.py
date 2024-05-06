@@ -1,15 +1,13 @@
-import streamlit as st
-import requests
-from typing import Optional, List
 import json
-import sseclient
 import uuid
 from dataclasses import dataclass
+from functools import partial
+from typing import List, Optional
 
-from settings import settings, Mode
-
-import logging
-logging.basicConfig(filename='info.log', level=logging.DEBUG)
+import requests
+import sseclient
+import streamlit as st
+from settings import Mode, settings
 
 
 @dataclass
@@ -31,8 +29,10 @@ def enum_from_str(cls, value: str | None) -> Mode | None:
 def filter_none_values(d: dict) -> dict:
     return {k: v for k, v in d.items() if v is not None}
 
+
 def message_index(active_mode: Mode) -> int:
     return len(st.session_state.messages[active_mode.value])
+
 
 def get_payload(params: dict) -> dict:
     return {
@@ -45,19 +45,23 @@ def get_payload(params: dict) -> dict:
         "input": filter_none_values(params),
     }
 
+
 def get_search_results(
     query: str,
     score_threshold: Optional[float] = None,
     num_sources: Optional[int] = None,
 ):
-    payload = get_payload({
+    payload = get_payload(
+        {
             "query": query,
             "score_threshold": score_threshold,
             "k": num_sources,
         }
     )
-    
-    response = requests.post(f"{settings.base_api_url}{settings.search_endpoint}", json=payload)
+
+    response = requests.post(
+        f"{settings.base_api_url}{settings.search_endpoint}", json=payload
+    )
     return response.json()["output"]
 
 
@@ -66,14 +70,17 @@ def get_stream(
     score_threshold: Optional[float] = None,
     num_sources: Optional[int] = None,
 ):
-    payload = get_payload({
+    payload = get_payload(
+        {
             "query": query,
             "score_threshold": score_threshold,
             "k": num_sources,
         }
     )
 
-    response = requests.post(f"{settings.base_api_url}{settings.query_endpoint}", json=payload, stream=True)
+    response = requests.post(
+        f"{settings.base_api_url}{settings.query_endpoint}", json=payload, stream=True
+    )
     client = sseclient.SSEClient(response)
     for event in client.events():
         output = json.loads(event.data)
@@ -85,17 +92,25 @@ def get_stream(
                 st.session_state.sources = source_documents
                 st.session_state.run_id = output["run_id"]
 
-def send_feedback(run_id: str, question: str, sentiment: bool, comment: Optional[str] = None):
-    payload = filter_none_values({
-        "question": question,
-        "run_id": run_id,
-        "score": sentiment,
-        "feedback_id": str(uuid.uuid4()),
-        "comment": comment,
-    })
-    response = requests.post(f"{settings.base_api_url}{settings.feedback_endpoint}", json=payload)
+
+def send_feedback(
+    run_id: str, question: str, sentiment: bool, comment: Optional[str] = None
+):
+    payload = filter_none_values(
+        {
+            "question": question,
+            "run_id": run_id,
+            "score": sentiment,
+            "feedback_id": str(uuid.uuid4()),
+            "comment": comment,
+        }
+    )
+    response = requests.post(
+        f"{settings.base_api_url}{settings.feedback_endpoint}", json=payload
+    )
     print(response.json())
     return response.json()
+
 
 def display_documents(documents: List[dict], mode: Mode):
     if mode == Mode.CHATBOT:
@@ -113,23 +128,33 @@ def display_documents(documents: List[dict], mode: Mode):
             ):
                 st.markdown(document["page_content"])
 
+
 def display_feedback_interface(message_id: MessageID, run_id: str, question: str):
     def send_and_update_feedback(sentiment: bool):
         send_feedback(run_id, question, sentiment)
-        st.session_state.messages[message_id.mode.value][message_id.i]["feedback"] = sentiment
+        st.session_state.messages[message_id.mode.value][message_id.i][
+            "feedback"
+        ] = sentiment
 
-    def feedback_button_params(sentiment: bool):
-        feedback = st.session_state.messages[message_id.mode.value][message_id.i].get("feedback")
-        return {
-            "key": f"{message_id.mode.value}_{message_id.i}_{sentiment}",
-            "disabled": feedback is not None,
-            "type": "primary" if feedback == sentiment else "secondary",
-            "on_click": lambda: send_and_update_feedback(sentiment),
-        }
+    # If feedback is not yet provided, display both thumbs up and thumbs down buttons
+    # otherwise, display only the selected feedback as a disabled button
+    options = [(True, "thumbsup"), (False, "thumbsdown")]
+    messages = st.session_state.messages[message_id.mode.value]
+    feedback = (
+        messages[message_id.i].get("feedback") if message_id.i < len(messages) else None
+    )
+    active_options = [(k, v) for k, v in options if feedback is None or feedback == k]
+    cols = st.columns(
+        [0.075 for _ in active_options] + [1 - 0.075 * len(active_options)]
+    )
+    for i, (sentiment, icon) in enumerate(active_options):
+        cols[i].button(
+            f":{icon}:",
+            key=f"{message_id.mode.value}_{message_id.i}_{sentiment}",
+            disabled=feedback is not None,
+            on_click=partial(send_and_update_feedback, sentiment),
+        )
 
-    col1, col2, _ = st.columns([.075, .075, .85])
-    col1.button(":thumbsup:", **feedback_button_params(True))
-    col2.button(":thumbsdown:", **feedback_button_params(False))
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -185,37 +210,41 @@ for message in st.session_state.messages[active_mode.value]:
         st.markdown(message["content"])
         display_documents(message["sources"], active_mode)
         if message["role"] == "assistant":
-            display_feedback_interface(message["id"], message["run_id"], message["question"])
+            display_feedback_interface(
+                message["id"], message["run_id"], message["question"]
+            )
 
 
-message_id = MessageID(active_mode, message_index(active_mode))
 if active_mode == Mode.CHATBOT:
     # React to user input
     if prompt := st.chat_input("What would you like help with?"):
         # Display user message in chat message container
         st.chat_message("user").markdown(prompt)
         # Add user message to chat history
+        user_message_id = MessageID(active_mode, message_index(active_mode))
         st.session_state.messages[active_mode.value].append(
             {
-                "id": message_id,
-                "role": "user", 
-                "content": prompt, 
+                "id": user_message_id,
+                "role": "user",
+                "content": prompt,
                 "sources": [],
-                "feedback": None,
             }
         )
 
+        assistant_message_id = MessageID(active_mode, message_index(active_mode))
         with st.chat_message("assistant"):
             full_response = st.write_stream(
                 get_stream(prompt, score_threshold, num_sources)
             )
             display_documents(st.session_state.sources, active_mode)
-            display_feedback_interface(message_id, st.session_state.run_id, prompt)
+            display_feedback_interface(
+                assistant_message_id, st.session_state.run_id, prompt
+            )
 
         # Add assistant response to chat history
         st.session_state.messages[active_mode.value].append(
             {
-                "id": message_id,
+                "id": assistant_message_id,
                 "role": "assistant",
                 "question": prompt,
                 "content": full_response,
@@ -228,21 +257,30 @@ else:
     if prompt := st.chat_input("Enter search query"):
         st.session_state.sources = []
         st.chat_message("user").markdown(prompt)
+        user_message_id = MessageID(active_mode, message_index(active_mode))
         st.session_state.messages[active_mode.value].append(
-            {"role": "user", "content": prompt, "sources": []}
+            {
+                "id": user_message_id,
+                "role": "user",
+                "content": prompt,
+                "sources": [],
+            }
         )
 
+        assistant_message_id = MessageID(active_mode, message_index(active_mode))
         with st.chat_message("assistant"):
             results = get_search_results(prompt, score_threshold, num_sources)
             response = f"{len(results)} Results found:"
             st.write(response)
             display_documents(results, active_mode)
-            display_feedback_interface(message_id, st.session_state.run_id, prompt)
+            display_feedback_interface(
+                assistant_message_id, st.session_state.run_id, prompt
+            )
 
         # Add assistant response to chat history
         st.session_state.messages[active_mode.value].append(
             {
-                "id": message_id,
+                "id": assistant_message_id,
                 "role": "assistant",
                 "question": prompt,
                 "content": response,

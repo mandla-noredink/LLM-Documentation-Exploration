@@ -1,9 +1,10 @@
-import os
 import getpass
-import dropbox
+import os
 import shutil
-from settings import settings
+
+import dropbox
 from dropbox.paper import ExportFormat, ListPaperDocsFilterBy
+from settings import settings
 
 # Notes: include document id in the file name for linking to URL
 

@@ -1,11 +1,11 @@
-from langchain.chains import RetrievalQA
-from langchain.callbacks import StdOutCallbackHandler
-from langchain_community.llms import Ollama
 from typing import Dict
+
+from ingest import get_embeddings_model, load_vector_store
+from langchain.callbacks import StdOutCallbackHandler
+from langchain.chains import RetrievalQA
+from langchain_community.llms import Ollama
 from langchain_core.runnables import RunnableLambda
 from langsmith import Client
-
-from ingest import load_vector_store, get_embeddings_model
 from settings import settings
 
 

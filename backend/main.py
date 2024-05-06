@@ -1,14 +1,12 @@
+from typing import Optional, Union
+from uuid import UUID
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
-from pydantic import BaseModel
-from typing import Optional, Union
-from uuid import UUID
 from langsmith import Client
-
+from pydantic import BaseModel
 from retriever import answer_chain, search_chain
-
-
 
 # import logging
 # logging.basicConfig(filename='info.log', level=logging.DEBUG)

@@ -1,7 +1,8 @@
 import os
-from pydantic_settings import BaseSettings
 from enum import Enum
+
 from __version__ import __version__
+from pydantic_settings import BaseSettings
 
 
 class Mode(Enum):
