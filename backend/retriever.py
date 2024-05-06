@@ -3,6 +3,7 @@ from langchain.callbacks import StdOutCallbackHandler
 from langchain_community.llms import Ollama
 from typing import Dict
 from langchain_core.runnables import RunnableLambda
+from langsmith import Client
 
 from ingest import load_vector_store, get_embeddings_model
 from settings import settings
@@ -11,6 +12,7 @@ from settings import settings
 def dict_subset(di, keys):
     return {key: di[key] for key in keys if key in di}
 
+client = Client()
 
 llm = Ollama(model=settings.ollama_llm, temperature=0)
 handler = StdOutCallbackHandler()
