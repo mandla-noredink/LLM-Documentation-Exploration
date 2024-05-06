@@ -8,17 +8,10 @@ from langsmith import Client
 from pydantic import BaseModel
 from retriever import answer_chain, search_chain
 
-# import logging
-# logging.basicConfig(filename='info.log', level=logging.DEBUG)
-
-
-# def log_info(req_body, res_body):
-#     logging.info(req_body)
-#     logging.info(res_body)
-
 
 class Query(BaseModel):
     question: str
+
 
 class SendFeedbackBody(BaseModel):
     run_id: UUID
@@ -27,6 +20,7 @@ class SendFeedbackBody(BaseModel):
     score: Union[float, int, bool, None] = None
     feedback_id: Optional[UUID] = None
     comment: Optional[str] = None
+
 
 client = Client()
 
@@ -56,6 +50,7 @@ add_routes(
     config_keys=["metadata"],
 )
 
+
 @app.post("/feedback")
 async def send_feedback(body: SendFeedbackBody):
     client.create_feedback(
@@ -66,21 +61,6 @@ async def send_feedback(body: SendFeedbackBody):
         feedback_id=body.feedback_id,
     )
     return {"result": "posted feedback successfully", "code": 200}
-
-# @app.middleware('http')
-# async def some_middleware(request: Request, call_next):
-#     print("Middleware")
-#     req_body = await request.body()
-#     print(req_body)
-#     response = await call_next(request)
-
-#     res_body = b''
-#     async for chunk in response.body_iterator:
-#         res_body += chunk
-
-#     task = BackgroundTask(log_info, req_body, res_body)
-#     return Response(content=res_body, status_code=response.status_code,
-#         headers=dict(response.headers), media_type=response.media_type, background=task)
 
 
 @app.get("/test")
