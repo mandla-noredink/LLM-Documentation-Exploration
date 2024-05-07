@@ -25,6 +25,7 @@ langserve = {extras = ["all"], version = "^0.1.1"}
 pydantic-settings = "^2.2.1"
 sseclient-py = "^1.8.0"
 isort = "^5.13.2"
+tqdm = "^4.66.4"
 
 
 [build-system]
