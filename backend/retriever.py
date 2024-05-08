@@ -7,7 +7,18 @@ from langchain_community.llms import Ollama
 from langchain_core.runnables import RunnableLambda
 from langsmith import Client
 from settings import settings
+from langchain.prompts import PromptTemplate
 
+# https://github.com/langchain-ai/langchain/issues/14191
+# https://stackoverflow.com/questions/77352474/langchain-how-to-get-complete-prompt-retrievalqa-from-chain-type
+
+PROMPT = "Use the following pieces of context to answer the question at the end. Do not use phrases like 'according to the context' in your answer. If you don't know the answer, just say that you don't know, don't try to make up an answer.\n\n{context}\n\nQuestion: {question}\nHelpful Answer:"
+
+# Create a PromptTemplate instance with your custom template
+custom_prompt = PromptTemplate(
+    template=PROMPT,
+    input_variables=["context", "question"],
+)
 
 def dict_subset(di, keys):
     return {key: di[key] for key in keys if key in di}
@@ -26,6 +37,9 @@ answer_chain = RunnableLambda(
         ),
         callbacks=[handler],
         return_source_documents=True,
+        chain_type_kwargs={
+            "prompt": custom_prompt,
+        }
     )(x["query"])
 )
 
