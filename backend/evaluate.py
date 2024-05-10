@@ -4,6 +4,7 @@ from typing import Optional
 
 from langsmith import Client
 from langsmith.evaluation import LangChainStringEvaluator, evaluate
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough, RunnableParallel
 
 from __version__ import __version__
 from retriever import answer_chain, llm
@@ -33,14 +34,15 @@ def evaluate_pipeline(dataset_name):
 
     def prepare_data(run, example):
         return {
-            "prediction": run.outputs["result"],
+            "prediction": run.outputs.get("answer"),
             "reference": example.outputs["answer"],
             "input": example.inputs["query"],
         }
 
     def context_prepare_data(run, example):
+        # print(run.outputs)
         return {
-            "context": get_context_from_documents(run.outputs["source_documents"]),
+            "context": get_context_from_documents(run.outputs["context"]),
             **prepare_data(run, example),
         }
 
@@ -52,8 +54,13 @@ def evaluate_pipeline(dataset_name):
     )
     timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
+    def target(x):
+        print(x)
+        return answer_chain.invoke({'question': x['query']})
+
+    # chain = RunnablePassthrough(query=lambda x: x["question"]) | answer_chain
     evaluate(
-        answer_chain.invoke,
+        lambda x: answer_chain.invoke({'question': x['query']}),
         data=dataset_name,
         evaluators=[qa_evaluator, context_qa_evaluator],
         experiment_prefix=f"{__version__}/{timestamp}",

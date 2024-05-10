@@ -1,6 +1,7 @@
 __pycache__
 .env
 .DS_Store
+.opt
 .vscode
 .cache
 .content
