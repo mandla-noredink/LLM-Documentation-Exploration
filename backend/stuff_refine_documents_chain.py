@@ -33,7 +33,7 @@ We have the opportunity to refine the existing summary (only if needed) with som
 {text}
 ------------
 Given the new context, refine the original summary.
-If the context isn't useful, return the original summary.\
+If the context isn't useful or relevant to the question, return the original summary.\
 """  # noqa: E501
 REFINE_PROMPT = PromptTemplate.from_template(REFINE_PROMPT_TMPL)
 

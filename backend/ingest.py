@@ -11,6 +11,7 @@ from langchain_community.vectorstores.faiss import FAISS
 from langchain.storage import InMemoryStore
 
 from parent_document_preprocess_retriever import ParentDocumentPreprocessRetriever
+from local_base_store import LocalBaseStore
 from settings import settings
 
 
@@ -58,44 +59,54 @@ def ingest_docs(documents):
         normalize_L2=True,
     )
 
-def ingest_docs_with_preprocess_retriever():
-    # https://python.langchain.com/v0.1/docs/modules/data_connection/retrievers/parent_document_retriever/
-    # https://stackoverflow.com/a/77865835
-    # https://medium.com/@guilhem.cheron35/sql-storage-langchain-rags-inmemorystore-alternative-ex-with-parentdocumentretriever-pgvector-5cc162950d77
-
-    parent_splitter = RecursiveCharacterTextSplitter.from_language(
+def get_text_splitters():
+    return {
+        "parent": RecursiveCharacterTextSplitter.from_language(
         Language.MARKDOWN,
         chunk_size=settings.chunk_size,
         chunk_overlap=settings.chunk_overlap,
         length_function=len,
-    )
-
-    child_splitter = RecursiveCharacterTextSplitter.from_language(
+    ),
+    "child": RecursiveCharacterTextSplitter.from_language(
         Language.MARKDOWN,
         chunk_size=1000,
         chunk_overlap=100,
         length_function=len,
     )
+    }
 
-    # TODO: get stores if exists else create
+def ingest_docs_with_preprocess_retriever():
+    # https://python.langchain.com/v0.1/docs/modules/data_connection/retrievers/parent_document_retriever/
+    # https://stackoverflow.com/a/77865835
+    # https://medium.com/@guilhem.cheron35/sql-storage-langchain-rags-inmemorystore-alternative-ex-with-parentdocumentretriever-pgvector-5cc162950d77
+    # from langchain.storage import LocalFileStore
+
     raw_documents = load_docs()
-    store = FAISS.from_documents([raw_documents[0]], get_embeddings(), normalize_L2=True)
-    docstore = InMemoryStore()
-
+    vector_store = FAISS.from_documents([raw_documents[0]], get_embeddings(), normalize_L2=True)
+    docstore = LocalBaseStore(settings.docstore_folder)
+    text_splitters = get_text_splitters()
     retriever = ParentDocumentPreprocessRetriever(
-        vectorstore=store,
+        vectorstore=vector_store,
         docstore=docstore,
-        child_splitter=child_splitter,
-        parent_splitter=parent_splitter,
-        search_kwargs={"k": 12},
+        child_splitter=text_splitters["child"],
+        parent_splitter=text_splitters["parent"],
+        search_kwargs={"k": settings.pre_rerank_doc_retrieval_num},
     )
 
-    # TODO: ONLY if stores don't exist, add documents
     retriever.add_documents(raw_documents)
-
-    # TODO: save stores if they don't exist
-
+    vector_store.save_local(settings.vector_store_path)
     return retriever
+
+
+def load_preprocess_retriever():
+    text_splitters = get_text_splitters()
+    return ParentDocumentPreprocessRetriever(
+        vectorstore=load_vector_store(),
+        docstore=LocalBaseStore(settings.docstore_folder),
+        child_splitter=text_splitters["child"],
+        parent_splitter=text_splitters["parent"],
+        search_kwargs={"k": settings.pre_rerank_doc_retrieval_num},
+    )
     
 
 def get_reranker_retriever(base_retriever):
@@ -137,7 +148,7 @@ def load_vector_store():
         normalize_L2=True,
     )
 
-retriever = ingest_docs_with_preprocess_retriever()
 
 if __name__ == "__main__":
-    build_vector_store()
+    ingest_docs_with_preprocess_retriever()
+    # build_vector_store()

@@ -1,11 +1,11 @@
-from typing import Dict, Callable, List, Protocol
+from typing import Any, Dict, Callable, List, Protocol
 from operator import itemgetter
 import types
 
 from ingest import get_embeddings_model, load_vector_store
 from langchain.callbacks import StdOutCallbackHandler
 from langchain_community.llms import Ollama
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough, RunnableParallel
+from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough, RunnableParallel
 from langsmith import Client
 from settings import settings
 from langchain.prompts import PromptTemplate
@@ -13,7 +13,7 @@ from langchain.chains.retrieval_qa.base import RetrievalQA
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.retrievers import ParentDocumentRetriever
 
-from ingest import retriever, get_reranker_retriever
+from ingest import load_preprocess_retriever, get_reranker_retriever
 from preprocess import pre_embedding_process
 # https://github.com/langchain-ai/langchain/issues/14191
 # https://stackoverflow.com/questions/77352474/langchain-how-to-get-complete-prompt-retrievalqa-from-chain-type
@@ -40,10 +40,10 @@ END OF DOCUMENT
 
 
 # Create a PromptTemplate instance with your custom template
-custom_prompt = PromptTemplate(
-    template=PROMPT,
-    input_variables=["context", "question"],
-)
+# custom_prompt = PromptTemplate(
+#     template=PROMPT,
+#     input_variables=["context", "question"],
+# )
 
 document_prompt = PromptTemplate(
     template=DOCUMENT_PROMPT,
@@ -101,6 +101,11 @@ summarize_chain = load_summarize_chain(llm, chain_type="refine", verbose=False)
 #     create_stuff_documents_chain(llm, custom_prompt),
 # )
 
+def get_documents_chain(llm, query, optimize: bool) -> Runnable[Dict[str, Any], Any]:
+    custom_prompt = PromptTemplate(template=PROMPT, input_variables=["context", "question"])
+    if optimize:
+        return create_stuff_refine_documents_chain(llm, custom_prompt, query)
+    return create_stuff_documents_chain(llm, custom_prompt)
 
 # TODO: Filters:
 # - [] pre-processing
@@ -108,12 +113,15 @@ summarize_chain = load_summarize_chain(llm, chain_type="refine", verbose=False)
 # - [] source summarization
 # With all of these unselected, we (should) have the original unimproved behaviour from previous commits.
 # Preprocessing requires re-ingestion, and so should simply toggle between a preprocessed and unprocessed vector set.
+base_retriever = load_preprocess_retriever()
+reranker_retriever = get_reranker_retriever(base_retriever)
 answer_chain = RunnablePassthrough.assign(input=lambda x: x["question"]) | RunnableLambda(
     lambda x: create_retrieval_chain(
         # retriever,
-        get_reranker_retriever(retriever),
+        reranker_retriever,
+        get_documents_chain(llm, x["input"], x.get("optimize", settings.optimize_by_default)),
         # create_stuff_documents_chain(llm, custom_prompt),
-        create_stuff_refine_documents_chain(llm, custom_prompt, x["input"])
+        # create_stuff_refine_documents_chain(llm, custom_prompt, x["input"])
     )
 )
 
@@ -172,11 +180,15 @@ def search_function(params: Dict[str, str]):
 
 
 search_chain = RunnableLambda(
-    lambda x: [
-        {**doc.dict(), "score": str(round(score, 3))}
-        for (doc, score) in vector_store.similarity_search_with_score_by_vector(
-            get_embeddings_model().embed_query(pre_embedding_process(x["query"])),
-            **dict_subset(x, ["score_threshold", "k"]),
-        )
-    ]
+    lambda x: reranker_retriever.get_relevant_documents(x["question"])
 )
+
+# search_chain = RunnableLambda(
+#     lambda x: [
+#         {**doc.dict(), "score": str(round(score, 3))}
+#         for (doc, score) in vector_store.similarity_search_with_score_by_vector(
+#             get_embeddings_model().embed_query(pre_embedding_process(x["query"])),
+#             **dict_subset(x, ["score_threshold", "k"]),
+#         )
+#     ]
+# )

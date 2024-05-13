@@ -46,3 +46,9 @@ Streaming:
 
 ## TODO:
 test that docs and feedback correspond to correct question
+
+## Performance Improvement resources
+https://python.langchain.com/v0.1/docs/modules/data_connection/retrievers/parent_document_retriever/
+https://python.langchain.com/v0.1/docs/integrations/retrievers/flashrank-reranker/
+https://python.langchain.com/v0.1/docs/modules/model_io/prompts/partial/
+https://medium.com/@vinusebastianthomas/document-chains-in-langchain-d33c4bdbabd8
