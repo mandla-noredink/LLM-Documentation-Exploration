@@ -124,7 +124,7 @@ def display_documents(documents: List[dict], mode: Mode):
     else:
         for document in documents:
             with st.expander(
-                f'{document["score"]}: `{document["metadata"]["source"]}`'
+                f'{document["metadata"]["relevance_score"]}: `{document["metadata"]["source"]}`'
             ):
                 st.markdown(document["page_content"])
 
