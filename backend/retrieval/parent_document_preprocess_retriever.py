@@ -1,7 +1,7 @@
 import uuid
 from typing import Any, Coroutine, List, Optional, Sequence
 
-from ingest.preprocess import pre_embedding_process, preprocess_document
+from ingestion.preprocess import pre_embedding_process, preprocess_document
 from langchain.retrievers import MultiVectorRetriever
 from langchain_core.callbacks import (AsyncCallbackManagerForRetrieverRun,
                                       CallbackManagerForRetrieverRun)

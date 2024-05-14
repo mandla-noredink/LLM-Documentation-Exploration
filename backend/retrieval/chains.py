@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from ingest.ingest import load_vector_store
+from ingestion.ingest import load_vector_store
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
@@ -8,8 +8,8 @@ from langchain.prompts import PromptTemplate
 from langchain_community.llms import Ollama
 from langchain_core.runnables import (Runnable, RunnableLambda,
                                       RunnablePassthrough)
-from retrieve.retrievers import get_reranker_retriever
-from retrieve.stuff_refine_documents_chain import \
+from retrieval.retrievers import get_reranker_retriever
+from retrieval.stuff_refine_documents_chain import \
     create_stuff_refine_documents_chain
 from settings import settings
 

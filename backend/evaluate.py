@@ -5,7 +5,7 @@ from typing import Optional, List
 from __version__ import __version__
 from langsmith import Client
 from langsmith.evaluation import LangChainStringEvaluator, evaluate
-from retrieve.chains import answer_chain, llm
+from retrieval.chains import answer_chain, llm
 from langchain_core.documents import Document
 
 client = Client()

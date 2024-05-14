@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic_settings import BaseSettings
 
 
-class VectorDB(Enum):
+class Storage(Enum):
     LOCAL = "FAISS"
     REMOTE = "PGVECTOR"
 
@@ -31,8 +31,14 @@ class Settings(BaseSettings):
     pg_password: str = "pg_password"
     pg_dbname: str = "pg_dbname"
 
+    vector_store_conn_name: str = "llm_doc_exp__vectors"
+    doc_store_conn_name: str = "llm_doc_exp__documents"
+
     # Vector DB selection
-    vector_db: VectorDB = VectorDB.LOCAL
+    storage: Storage = Storage.REMOTE
+
+    def db_conn_string(self):
+        return f"postgresql+psycopg://{self.pg_user}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_dbname}"
 
 
 settings = Settings()

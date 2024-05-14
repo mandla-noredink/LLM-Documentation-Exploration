@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langsmith import Client
 from pydantic import BaseModel
-from retrieve.chains import answer_chain, search_chain
+from ingestion.ingest import ingest_documents
+from retrieval.chains import answer_chain, search_chain
 
 
 class Query(BaseModel):
@@ -60,6 +61,12 @@ async def send_feedback(body: SendFeedbackBody):
         feedback_id=body.feedback_id,
     )
     return {"result": "posted feedback successfully", "code": 200}
+
+
+@app.get("/ingest")
+async def run_ingestion():
+    ingest_documents()
+    return {"result": "content ingested successfully", "code": 200}
 
 
 if __name__ == "__main__":

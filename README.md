@@ -20,14 +20,14 @@
   - Move to `./backend/.content`
     - Should look like `./backend/.content/Engineering/Fires/...`
 - install poetry
-- ingest documents
-  - `poetry run python backend/ingest.py`
 - run backend server
   - `cd backend`
   - `poetry run uvicorn main:app --reload`
 - run frontend server
   - `cd frontend`
   - `poetry run streamlit run main.py`
+- ingest documents
+  - `/ingest` API endpoint
 
 ## Resources:
 - https://www.youtube.com/playlist?list=PLrSHiQgy4VjGQohoAmgX9VFH52psNOu71
@@ -52,3 +52,6 @@ https://python.langchain.com/v0.1/docs/modules/data_connection/retrievers/parent
 https://python.langchain.com/v0.1/docs/integrations/retrievers/flashrank-reranker/
 https://python.langchain.com/v0.1/docs/modules/model_io/prompts/partial/
 https://medium.com/@vinusebastianthomas/document-chains-in-langchain-d33c4bdbabd8
+https://python.langchain.com/v0.1/docs/integrations/retrievers/re_phrase/
+
+https://stepup.ai/rag_improving_retrieval/
