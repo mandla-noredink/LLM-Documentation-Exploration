@@ -1,17 +1,18 @@
 import datetime
 import os
-from typing import Optional
+from typing import Optional, List
 
 from __version__ import __version__
 from langsmith import Client
 from langsmith.evaluation import LangChainStringEvaluator, evaluate
 from retrieve.chains import answer_chain, llm
+from langchain_core.documents import Document
 
 client = Client()
 MAXIMUM_CONCURRENCY = 5
 
 
-def upload_dataset_from_csv(name: str, file_path: Optional[str] = None):
+def upload_dataset_from_csv(name: str, file_path: Optional[str] = None) -> None:
     file_path = file_path or "datasets"
     client.upload_csv(
         csv_file=os.path.join(file_path, f"{name}.csv"),
@@ -21,14 +22,14 @@ def upload_dataset_from_csv(name: str, file_path: Optional[str] = None):
     )
 
 
-def get_context_from_documents(documents):
+def get_context_from_documents(documents: List[Document]) -> str:
     document_separator = "\n\n"
     return document_separator.join(
         f"Document {i}:\n{doc.page_content}" for i, doc in enumerate(documents)
     )
 
 
-def evaluate_pipeline(dataset_name):
+def evaluate_pipeline(dataset_name: str) -> None:
 
     def prepare_data(run, example):
         return {
