@@ -1,13 +1,12 @@
+import json
 import os
 import re
-import json
 from pathlib import Path
-from typing import Iterator, List, Optional, Generic, Sequence, Tuple, TypeVar, Union
+from typing import Iterator, List, Optional, Sequence, Tuple, Union
 
-from langchain_core.stores import BaseStore
 from langchain.storage.exceptions import InvalidKeyException
 from langchain_core.documents import Document
-
+from langchain_core.stores import BaseStore
 
 
 class LocalBaseStore(BaseStore[str, Document]):

@@ -1,5 +1,3 @@
-from enum import Enum
-
 from pydantic_settings import BaseSettings
 
 
@@ -12,10 +10,13 @@ class Settings(BaseSettings):
     vector_store_path: str = ".vectorstore/"
     docstore_folder: str = ".docstore/"
     cache_folder: str = ".cache/"
-    chunk_size: int = 1000
-    chunk_overlap: int = 100
 
-    optimize_by_default: bool = False
     pre_rerank_doc_retrieval_num: int = 12
+    optimize_by_default: bool = False
+    parent_chunk_size: int = 1000
+    parent_chunk_overlap: int = 100
+    child_chunk_size: int = 1000
+    child_chunk_overlap: int = 100
+
 
 settings = Settings()

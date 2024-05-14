@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langsmith import Client
 from pydantic import BaseModel
-from retriever import answer_chain, search_chain
+from retrieve.chains import answer_chain, search_chain
 
 
 class Query(BaseModel):

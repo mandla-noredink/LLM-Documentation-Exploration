@@ -1,26 +1,14 @@
 """Adds summary refinement to document combination chain"""
-from typing import Any, Dict, List, Optional, Tuple
-
-from langchain_core.callbacks import Callbacks
-from langchain_core.documents import Document
-from langchain_core.language_models import LanguageModelLike
-from langchain_core.output_parsers import BaseOutputParser, StrOutputParser
-from langchain_core.prompts import BasePromptTemplate, format_document
-from langchain_core.pydantic_v1 import Extra, Field, root_validator
-from langchain_core.runnables import Runnable, RunnablePassthrough
-from langchain.chains.summarize import load_summarize_chain
+from typing import Any, Dict, Optional
 
 from langchain.chains.combine_documents.base import (
-    DEFAULT_DOCUMENT_PROMPT,
-    DEFAULT_DOCUMENT_SEPARATOR,
-    DOCUMENTS_KEY,
-    BaseCombineDocumentsChain,
-    _validate_prompt,
-)
-from langchain.chains.llm import LLMChain
-
-
-from langchain_core.prompts import PromptTemplate
+    DEFAULT_DOCUMENT_PROMPT, DEFAULT_DOCUMENT_SEPARATOR, DOCUMENTS_KEY,
+    _validate_prompt)
+from langchain.chains.summarize import load_summarize_chain
+from langchain_core.language_models import LanguageModelLike
+from langchain_core.output_parsers import BaseOutputParser, StrOutputParser
+from langchain_core.prompts import BasePromptTemplate, PromptTemplate
+from langchain_core.runnables import Runnable, RunnablePassthrough
 
 # TODO: These should include document source as well as the text
 REFINE_PROMPT_TMPL = """\

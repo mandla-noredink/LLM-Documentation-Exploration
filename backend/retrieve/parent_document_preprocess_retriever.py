@@ -1,14 +1,13 @@
 import uuid
-from typing import Coroutine, List, Optional, Sequence, Any
+from typing import Any, Coroutine, List, Optional, Sequence
 
+from ingest.preprocess import pre_embedding_process, preprocess_document
+from langchain.retrievers import MultiVectorRetriever
+from langchain_core.callbacks import (AsyncCallbackManagerForRetrieverRun,
+                                      CallbackManagerForRetrieverRun)
 from langchain_core.documents import Document
 from langchain_text_splitters import TextSplitter
 
-from langchain.retrievers import MultiVectorRetriever
-
-from langchain_core.callbacks import AsyncCallbackManagerForRetrieverRun, CallbackManagerForRetrieverRun
-
-from preprocess import preprocess_document, pre_embedding_process
 
 class ParentDocumentPreprocessRetriever(MultiVectorRetriever):
     """Updates `langchain.retrievers.ParentDocumentRetriever` to include a custom 

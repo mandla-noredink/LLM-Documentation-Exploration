@@ -2,12 +2,10 @@ import datetime
 import os
 from typing import Optional
 
+from __version__ import __version__
 from langsmith import Client
 from langsmith.evaluation import LangChainStringEvaluator, evaluate
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough, RunnableParallel
-
-from __version__ import __version__
-from retriever import answer_chain, llm
+from retrieve.chains import answer_chain, llm
 
 client = Client()
 MAXIMUM_CONCURRENCY = 5
@@ -40,7 +38,6 @@ def evaluate_pipeline(dataset_name):
         }
 
     def context_prepare_data(run, example):
-        # print(run.outputs)
         return {
             "context": get_context_from_documents(run.outputs["context"]),
             **prepare_data(run, example),
@@ -54,13 +51,8 @@ def evaluate_pipeline(dataset_name):
     )
     timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-    def target(x):
-        print(x)
-        return answer_chain.invoke({'question': x['query']})
-
-    # chain = RunnablePassthrough(query=lambda x: x["question"]) | answer_chain
     evaluate(
-        lambda x: answer_chain.invoke({'question': x['query']}),
+        lambda x: answer_chain.invoke({"question": x["query"]}),
         data=dataset_name,
         evaluators=[qa_evaluator, context_qa_evaluator],
         experiment_prefix=f"{__version__}/{timestamp}",
