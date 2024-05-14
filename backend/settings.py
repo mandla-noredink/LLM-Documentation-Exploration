@@ -1,4 +1,10 @@
+from enum import Enum
 from pydantic_settings import BaseSettings
+
+
+class VectorDB(Enum):
+    LOCAL = "FAISS"
+    REMOTE = "PGVECTOR"
 
 
 class Settings(BaseSettings):
@@ -17,6 +23,16 @@ class Settings(BaseSettings):
     parent_chunk_overlap: int = 100
     child_chunk_size: int = 1000
     child_chunk_overlap: int = 100
+
+    # For PG Vector Store
+    pg_host: str = "pg_host"
+    pg_port: str = "pg_port"
+    pg_user: str = "pg_user"
+    pg_password: str = "pg_password"
+    pg_dbname: str = "pg_dbname"
+
+    # Vector DB selection
+    vector_db: VectorDB = VectorDB.LOCAL
 
 
 settings = Settings()

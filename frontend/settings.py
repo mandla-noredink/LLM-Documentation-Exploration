@@ -14,7 +14,7 @@ class Settings(BaseSettings):
 
     environment: str = os.getenv("ENV", "development")
     app_id: str = f"llm-doc-exp:{__version__}"
-    base_api_url: str = "http://127.0.0.1:8080"
+    base_api_url: str = "http://127.0.0.1:8000"
     query_endpoint: str = "/query/stream_events/"
     search_endpoint: str = "/search/invoke/"
     feedback_endpoint: str = "/feedback/"
