@@ -1,11 +1,70 @@
 from enum import Enum
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+from logging.config import dictConfig
+from pathlib import Path
+import logging
+import os
 
+_LOG_FOLDER = ".logs/"
+_LOG_PACKAGE_BLOCKLIST = [
+    "unstructured",
+    "markdown",
+]
+
+def create_file(file_path):
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    filename = Path(file_path)
+    filename.touch(exist_ok=True) 
 
 class Storage(Enum):
     LOCAL = "FAISS"
     REMOTE = "PGVECTOR"
 
+
+class LogConfig(BaseModel):
+    LOGGER_NAME: str = "llmdocexp"
+    LOG_FORMAT: str = "%(levelprefix)s | %(name)s | %(asctime)s | %(message)s"
+    LOG_LEVEL: str = "DEBUG"
+
+    # Logging config
+    version: int = 1
+    disable_existing_loggers: bool = False
+    formatters: dict = {
+        "default": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    }
+    handlers: dict = {
+        "debug_console_handler": {
+            'level': 'DEBUG',
+            "formatter": "default",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+        },
+        'info_rotating_file_handler': {
+            'level': 'INFO',
+            'formatter': 'default',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': f'{_LOG_FOLDER}/info.log',
+            'mode': 'a',
+            'maxBytes': 1048576,
+            'backupCount': 5
+        },
+        'error_file_handler': {
+            'level': 'WARNING',
+            'formatter': 'default',
+            'class': 'logging.FileHandler',
+            'filename': f'{_LOG_FOLDER}/error.log',
+            'mode': 'a',
+        },
+
+    }
+    loggers: dict = {
+        "": {"handlers": ['debug_console_handler', 'info_rotating_file_handler', 'error_file_handler'], "level": LOG_LEVEL},
+    }
 
 class Settings(BaseSettings):
 
@@ -43,4 +102,11 @@ class Settings(BaseSettings):
         return f"postgresql+psycopg://{self.pg_user}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_dbname}"
 
 
+create_file(f"{_LOG_FOLDER}info.log")
+create_file(f"{_LOG_FOLDER}error.log")
+dictConfig(LogConfig().model_dump())
+for module in _LOG_PACKAGE_BLOCKLIST:
+    logging.getLogger(module).setLevel(logging.WARNING)
+def get_logger(name):
+    return logging.getLogger(name)
 settings = Settings()

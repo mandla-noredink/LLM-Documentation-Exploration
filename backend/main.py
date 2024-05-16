@@ -1,18 +1,17 @@
 from typing import Optional, Union
+from pydantic import BaseModel
 from uuid import UUID
 import os
 
-from fastapi import FastAPI
+from fastapi import File, UploadFile, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langsmith import Client
-from pydantic import BaseModel
-from ingestion.ingest import ingest_documents
-from retrieval.chains import answer_chain, search_chain
-from fastapi import File, UploadFile
 
 from ingestion.upload_handler import unzip, create_folder, clear_folder
-from settings import settings
+from ingestion.ingest import ingest_documents
+from retrieval.chains import answer_chain, search_chain
+from settings import settings, get_logger
 
 class Query(BaseModel):
     question: str
@@ -26,6 +25,7 @@ class SendFeedbackBody(BaseModel):
     feedback_id: Optional[UUID] = None
     comment: Optional[str] = None
 
+logger = get_logger(__name__)
 client = Client()
 app = FastAPI()
 
@@ -56,6 +56,7 @@ add_routes(
 
 @app.post("/feedback")
 async def send_feedback(body: SendFeedbackBody):
+    logger.info("Uploading feedback")
     client.create_feedback(
         body.run_id,
         body.key,
@@ -68,7 +69,9 @@ async def send_feedback(body: SendFeedbackBody):
 
 @app.get("/ingest")
 async def run_ingestion():
+    logger.info("Ingesting documents")
     ingest_documents()
+    logger.info("Document ingestion complete")
     return {"result": "content ingested successfully", "code": 200}
 
 
@@ -78,11 +81,11 @@ async def upload(file: UploadFile = File(...)):
     create_folder(settings.download_folder)
 
     try:
-        print("Uploading file")
+        logger.info(f"Uploading file: {file.filename}")
         contents = file.file.read()
         assert file.filename
         file_path = os.path.join(settings.temp_folder, file.filename)
-        print("Opening file to write")
+        logger.debug("Opening file to write")
         with open(file_path, 'wb') as f:
             f.write(contents)
     except Exception:
@@ -91,13 +94,15 @@ async def upload(file: UploadFile = File(...)):
         file.file.close()
 
     try:
-        print("Finished writing file")
+        logger.debug("Finished writing file")
         clear_folder(settings.download_folder)
-        print("Unzipping folder")
+        logger.debug("Unzipping folder")
         unzip(file_path, settings.download_folder)
-        print("Folder unzipped")
+        logger.debug("Folder unzipped")
         clear_folder(settings.temp_folder, delete_folder=True)
+        logger.debug("Ingesting documents")
         ingest_documents()    
+        logger.info("Upload and ingestion complete")
     except Exception:
         return {"message": "There was an error processing the uploaded file"}
     

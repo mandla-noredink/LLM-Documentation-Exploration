@@ -13,8 +13,9 @@ from langchain_postgres import PGVector
 from langchain_postgres.vectorstores import PGVector
 
 from retrieval.retrievers import get_base_retriever
-from settings import Storage, settings
+from settings import Storage, settings, get_logger
 
+logger = get_logger(__name__)
 
 def _load_docs() -> List[Document]:
     loader = DirectoryLoader(
@@ -92,10 +93,17 @@ def ingest_documents() -> None:
     # https://stackoverflow.com/a/77865835
     # https://medium.com/@guilhem.cheron35/sql-storage-langchain-rags-inmemorystore-alternative-ex-with-parentdocumentretriever-pgvector-5cc162950d77
 
+    logger.debug("Loading raw documents")
     raw_documents = _load_docs()
+    logger.debug("Building vector store")
     vector_store = _build_vector_store()
+    logger.debug("Getting retriever")
     retriever = get_base_retriever(vector_store)
+    logger.debug("Adding documents to retriever")
     retriever.add_documents(raw_documents)
     if settings.storage is Storage.LOCAL:
+        logger.debug("Saving vector store")
         assert type(vector_store) == FAISS
         vector_store.save_local(settings.vector_store_path)
+    logger.debug("Document ingestion complete")
+    
