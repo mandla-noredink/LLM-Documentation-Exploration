@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     vector_store_path: str = ".vectorstore/"
     docstore_folder: str = ".docstore/"
     cache_folder: str = ".cache/"
+    temp_folder: str = ".tmp/"
 
     pre_rerank_doc_retrieval_num: int = 12
     optimize_by_default: bool = False
@@ -33,6 +34,7 @@ class Settings(BaseSettings):
 
     vector_store_conn_name: str = "llm_doc_exp__vectors"
     doc_store_conn_name: str = "llm_doc_exp__documents"
+    flashrank_model_name: str = "ms-marco-MiniLM-L-12-v2"
 
     # Vector DB selection
     storage: Storage = Storage.REMOTE

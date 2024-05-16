@@ -1,5 +1,6 @@
 from typing import Optional, Union
 from uuid import UUID
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +9,10 @@ from langsmith import Client
 from pydantic import BaseModel
 from ingestion.ingest import ingest_documents
 from retrieval.chains import answer_chain, search_chain
+from fastapi import File, UploadFile
 
+from ingestion.upload_handler import unzip, create_folder, clear_folder
+from settings import settings
 
 class Query(BaseModel):
     question: str
@@ -21,7 +25,6 @@ class SendFeedbackBody(BaseModel):
 
     feedback_id: Optional[UUID] = None
     comment: Optional[str] = None
-
 
 client = Client()
 app = FastAPI()
@@ -68,6 +71,37 @@ async def run_ingestion():
     ingest_documents()
     return {"result": "content ingested successfully", "code": 200}
 
+
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    create_folder(settings.temp_folder)
+    create_folder(settings.download_folder)
+
+    try:
+        print("Uploading file")
+        contents = file.file.read()
+        assert file.filename
+        file_path = os.path.join(settings.temp_folder, file.filename)
+        print("Opening file to write")
+        with open(file_path, 'wb') as f:
+            f.write(contents)
+    except Exception:
+        return {"message": "There was an error uploading the file"}
+    finally:
+        file.file.close()
+
+    try:
+        print("Finished writing file")
+        clear_folder(settings.download_folder)
+        print("Unzipping folder")
+        unzip(file_path, settings.download_folder)
+        print("Folder unzipped")
+        clear_folder(settings.temp_folder, delete_folder=True)
+        ingest_documents()    
+    except Exception:
+        return {"message": "There was an error processing the uploaded file"}
+    
+    return {"message": f"Successfully uploaded {file.filename}"}
 
 if __name__ == "__main__":
     import uvicorn

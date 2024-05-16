@@ -111,6 +111,13 @@ def send_feedback(
     print(response.json())
     return response.json()
 
+def upload_content(content):
+    files = {'file': content}
+    response = requests.post(
+        f"{settings.base_api_url}{settings.upload_endpoint}",
+        files=files,
+    )
+    return response.json()
 
 def display_documents(documents: List[dict], mode: Mode):
     if mode == Mode.CHATBOT:
@@ -201,6 +208,12 @@ with st.sidebar:
             value=settings.default_score_threshold,
             step=settings.score_threshold_step,
         )
+
+    with st.expander("Documentation Upload"):
+        uploaded_file = st.file_uploader("Choose a file")
+        if uploaded_file is not None:
+            upload_content(uploaded_file)
+            st.success("File successfully uploaded!")
 
 st.divider()
 
