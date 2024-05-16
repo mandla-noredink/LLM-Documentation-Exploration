@@ -21,9 +21,9 @@ class Settings(BaseSettings):
     upload_endpoint: str = "/upload/"
     default_mode: Mode = Mode.CHATBOT
 
-    min_num_sources: int = 2
-    max_num_sources: int = 8
-    default_num_sources: int = 5
+    min_num_sources: int = 1
+    max_num_sources: int = 6
+    default_num_sources: int = 3
 
     max_score_threshold: float = 2.0
     min_score_threshold: float = 0.0

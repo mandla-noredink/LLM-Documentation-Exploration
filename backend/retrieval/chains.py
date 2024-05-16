@@ -31,7 +31,7 @@ Question: {question}
 Helpful Answer:"""
 
 
-def _get_documents_chain(llm, query, optimize: bool) -> Runnable[Dict[str, Any], Any]:
+def _get_documents_chain(llm, query: str, optimize: bool) -> Runnable[Dict[str, Any], Any]:
     custom_prompt = PromptTemplate(
         template=PROMPT, input_variables=["context", "question"]
     )
@@ -40,21 +40,26 @@ def _get_documents_chain(llm, query, optimize: bool) -> Runnable[Dict[str, Any],
     return create_stuff_documents_chain(llm, custom_prompt)
 
 
-_retriever = get_reranker_retriever(vector_store=load_vector_store())
+_vector_store = load_vector_store()
+_retriever = get_reranker_retriever(vector_store=_vector_store)
 llm = Ollama(model=settings.ollama_llm, temperature=0)
 
 answer_chain = RunnablePassthrough.assign(
-    input=lambda x: x["question"]
+    input=lambda x: x["question"], 
+    optimize=lambda x: x["optimize"],
 ) | RunnableLambda(
     lambda x: create_retrieval_chain(
         _retriever,
         _get_documents_chain(
             llm, 
-            x["input"], x.get("optimize", settings.optimize_by_default)
+            x["question"], x.get("optimize", settings.optimize_by_default)
         ),
     )
 )
 
 search_chain = RunnableLambda(
-    lambda x: _retriever.get_relevant_documents(x["question"])
+    lambda x: get_reranker_retriever(
+        vector_store=_vector_store,
+        top_n=x.get("k"),
+    ).get_relevant_documents(x["question"])
 )

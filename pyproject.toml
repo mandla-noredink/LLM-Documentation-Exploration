@@ -30,6 +30,7 @@ langchain-postgres = "^0.0.3"
 psycopg = {extras = ["binary", "pool"], version = "^3.1.18"}
 flashrank = "0.2.4"
 python-multipart = "^0.0.9"
+streamlit-js-eval = "^0.1.7"
 
 
 [build-system]

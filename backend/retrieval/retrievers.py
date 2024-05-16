@@ -1,3 +1,4 @@
+from typing import Optional
 from flashrank import Ranker
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import FlashrankRerank
@@ -53,13 +54,17 @@ def get_base_retriever(vector_store: VectorStore) -> ParentDocumentPreprocessRet
     )
 
 
-def get_reranker_retriever(vector_store: VectorStore) -> ContextualCompressionRetriever:
+def get_reranker_retriever(
+    vector_store: VectorStore,
+    top_n: Optional[int] = None,
+) -> ContextualCompressionRetriever:
     # Reranking
     # https://python.langchain.com/v0.1/docs/integrations/retrievers/flashrank-reranker/
 
     base_retriever = get_base_retriever(vector_store)
     ranker = Ranker(model_name=settings.flashrank_model_name)
     compressor = FlashrankRerank(client=ranker, model=settings.flashrank_model_name)
+    compressor.top_n = top_n or settings.default_reranked_top_n
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=base_retriever
     )

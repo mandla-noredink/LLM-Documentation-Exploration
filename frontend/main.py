@@ -7,6 +7,7 @@ from typing import List, Optional
 import requests
 import sseclient
 import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
 from settings import Mode, settings
 
 
@@ -48,13 +49,11 @@ def get_payload(params: dict) -> dict:
 
 def get_search_results(
     query: str,
-    score_threshold: Optional[float] = None,
     num_sources: Optional[int] = None,
 ):
     payload = get_payload(
         {
-            "query": query,
-            "score_threshold": score_threshold,
+            "question": query,
             "k": num_sources,
         }
     )
@@ -67,30 +66,34 @@ def get_search_results(
 
 def get_stream(
     query: str,
-    score_threshold: Optional[float] = None,
+    optimize: Optional[bool] = False,
     num_sources: Optional[int] = None,
 ):
     payload = get_payload(
         {
-            "query": query,
-            "score_threshold": score_threshold,
+            "question": query,
+            "optimize": optimize,
             "k": num_sources,
         }
     )
 
     response = requests.post(
-        f"{settings.base_api_url}{settings.query_endpoint}", json=payload, stream=True
+        f"{settings.base_api_url}{settings.query_endpoint}", 
+        json=payload, 
+        stream=True,
     )
     client = sseclient.SSEClient(response)
     for event in client.events():
         output = json.loads(event.data)
-        if output["event"] == "on_llm_stream":
+        if output["event"] == "on_llm_stream" and "seq:step:3" in output["tags"]:
             if chunk := output["data"].get("chunk"):
                 yield chunk
         elif output["event"] == "on_chain_end":
-            if source_documents := output["data"]["output"].get("source_documents"):
-                st.session_state.sources = source_documents
-                st.session_state.run_id = output["run_id"]
+            if results := output["data"].get("output"):
+                if isinstance(results, dict):
+                    if source_documents := results.get("context"):
+                        st.session_state.sources = source_documents
+                        st.session_state.run_id = output["run_id"]
 
 
 def send_feedback(
@@ -181,39 +184,33 @@ if "run_id" not in st.session_state:
 st.title("AI Documentation Explorer")
 
 # User Configuration Sidebar
+optimize = False
 num_sources = None
-score_threshold = None
 with st.sidebar:
     st.subheader("The Power of NRI Docs in the Palm of Your Hand")
     st.header("Settings")
     mode = st.radio("Search Mode", options=["Chatbot", "Doc Search"])
     active_mode = enum_from_str(Mode, mode) or settings.default_mode
 
-    sources_filtering = st.radio(
-        "Sources Filtering", options=["Num Docs", "Similarity Threshold"]
-    )
-
-    if sources_filtering == "Num Docs":
+    if mode == "Chatbot":
+        optimize = st.toggle("LLM Query Optimization")
+        st.caption("Query optimization summarizes the source documents that get sent to the LLM. This generally improves performance by stripping out irrelevant information, but requires multiple LLM calls and thus takes more time. ")
+    else:
         num_sources = st.slider(
             label="Number of documents to reference",
             min_value=settings.min_num_sources,
             max_value=settings.max_num_sources,
             value=settings.default_num_sources,
         )
-    elif sources_filtering == "Similarity Threshold":
-        score_threshold = st.slider(
-            label="Similarity matching threshold",
-            min_value=settings.min_score_threshold,
-            max_value=settings.max_score_threshold,
-            value=settings.default_score_threshold,
-            step=settings.score_threshold_step,
-        )
 
     with st.expander("Documentation Upload"):
-        uploaded_file = st.file_uploader("Choose a file")
+        st.caption("To keep the knowledge base up to date, a zip file containing the latest versions of the documents to be used can be uploaded and ingested through this interface.")
+        uploaded_file = st.file_uploader("Choose a file (page refreshes after upload)")
         if uploaded_file is not None:
-            upload_content(uploaded_file)
+            with st.spinner('Uploading file...'):
+                upload_content(uploaded_file)
             st.success("File successfully uploaded!")
+            streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 st.divider()
 
@@ -247,7 +244,7 @@ if active_mode == Mode.CHATBOT:
         assistant_message_id = MessageID(active_mode, message_index(active_mode))
         with st.chat_message("assistant"):
             full_response = st.write_stream(
-                get_stream(prompt, score_threshold, num_sources)
+                get_stream(prompt, optimize, num_sources)
             )
             display_documents(st.session_state.sources, active_mode)
             display_feedback_interface(
@@ -282,7 +279,7 @@ else:
 
         assistant_message_id = MessageID(active_mode, message_index(active_mode))
         with st.chat_message("assistant"):
-            results = get_search_results(prompt, score_threshold, num_sources)
+            results = get_search_results(prompt, num_sources)
             response = f"{len(results)} Results found:"
             st.write(response)
             display_documents(results, active_mode)

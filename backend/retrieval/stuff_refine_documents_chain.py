@@ -1,9 +1,13 @@
 """Adds summary refinement to document combination chain"""
+
 from typing import Any, Dict, Optional
 
 from langchain.chains.combine_documents.base import (
-    DEFAULT_DOCUMENT_PROMPT, DEFAULT_DOCUMENT_SEPARATOR, DOCUMENTS_KEY,
-    _validate_prompt)
+    DEFAULT_DOCUMENT_PROMPT,
+    DEFAULT_DOCUMENT_SEPARATOR,
+    DOCUMENTS_KEY,
+    _validate_prompt,
+)
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.language_models import LanguageModelLike
 from langchain_core.output_parsers import BaseOutputParser, StrOutputParser
@@ -35,9 +39,8 @@ Text:
 "{text}"
 ```
 
-CONCISE SUMMARY:"""
+CONCISE SUMMARY: """
 QUESTION_PROMPT = PromptTemplate.from_template(prompt_template)
-
 
 
 def create_stuff_refine_documents_chain(
@@ -102,12 +105,11 @@ def create_stuff_refine_documents_chain(
 
     def format_docs(inputs: dict) -> str:
         chain = load_summarize_chain(
-            llm, 
-            chain_type="refine", 
+            llm,
+            chain_type="refine",
             verbose=False,
             question_prompt=QUESTION_PROMPT.partial(query=query),
             refine_prompt=REFINE_PROMPT.partial(query=query),
-
         )
         return chain.invoke({"input_documents": inputs[DOCUMENTS_KEY]}).get("output_text", "")
         # return document_separator.join(
