@@ -58,9 +58,8 @@ def get_reranker_retriever(vector_store: VectorStore) -> ContextualCompressionRe
     # https://python.langchain.com/v0.1/docs/integrations/retrievers/flashrank-reranker/
 
     base_retriever = get_base_retriever(vector_store)
-    ranker = Ranker(model_name="ms-marco-MiniLM-L-12-v2", cache_dir=".opt")
-    compressor = FlashrankRerank(client=ranker)
-    compressor.client = ranker  # NOTE: This is required as the assignment on initialization doesn't seem to work
+    ranker = Ranker(model_name=settings.flashrank_model_name)
+    compressor = FlashrankRerank(client=ranker, model=settings.flashrank_model_name)
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=base_retriever
     )

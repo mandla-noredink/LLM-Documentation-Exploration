@@ -40,14 +40,14 @@ def _get_documents_chain(llm, query, optimize: bool) -> Runnable[Dict[str, Any],
     return create_stuff_documents_chain(llm, custom_prompt)
 
 
-_reranker_retriever = get_reranker_retriever(vector_store=load_vector_store())
+_retriever = get_reranker_retriever(vector_store=load_vector_store())
 llm = Ollama(model=settings.ollama_llm, temperature=0)
 
 answer_chain = RunnablePassthrough.assign(
     input=lambda x: x["question"]
 ) | RunnableLambda(
     lambda x: create_retrieval_chain(
-        _reranker_retriever,
+        _retriever,
         _get_documents_chain(
             llm, 
             x["input"], x.get("optimize", settings.optimize_by_default)
@@ -56,5 +56,5 @@ answer_chain = RunnablePassthrough.assign(
 )
 
 search_chain = RunnableLambda(
-    lambda x: _reranker_retriever.get_relevant_documents(x["question"])
+    lambda x: _retriever.get_relevant_documents(x["question"])
 )
