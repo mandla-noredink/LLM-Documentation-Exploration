@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langserve import add_routes
 from langsmith import Client
 
-from ingestion.upload_handler import unzip, create_folder, clear_folder
+from utils import unzip, create_folder, clear_folder
 from ingestion.ingest import ingest_documents
 from retrieval.chains import answer_chain, search_chain
 from settings import settings, get_logger

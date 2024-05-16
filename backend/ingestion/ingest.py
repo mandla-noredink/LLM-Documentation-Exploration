@@ -14,12 +14,16 @@ from langchain_postgres.vectorstores import PGVector
 
 from retrieval.retrievers import get_base_retriever
 from settings import Storage, settings, get_logger
+from utils import clear_folder
 
 logger = get_logger(__name__)
 
+
 def _load_docs() -> List[Document]:
     loader = DirectoryLoader(
-        settings.download_folder, glob="**/*.md", loader_cls=UnstructuredMarkdownLoader
+        settings.rel_path(settings.download_folder),
+        glob="**/*.md",
+        loader_cls=UnstructuredMarkdownLoader,
     )
     return loader.load()
 
@@ -29,11 +33,20 @@ def _get_embeddings() -> Embeddings:
     core_embeddings_model = OllamaEmbeddings(model=settings.ollama_embeddings_model)
 
     return CacheBackedEmbeddings.from_bytes_store(
-        core_embeddings_model, store, namespace=core_embeddings_model.model
+        core_embeddings_model,
+        store,
+        namespace=core_embeddings_model.model,
     )
 
 
+def _delete_local_vector_store():
+    clear_folder(settings.cache_folder)
+    clear_folder(settings.vector_store_folder)
+    clear_folder(settings.docstore_folder)
+
+
 def _build_local_vector_store() -> VectorStore:
+    _delete_local_vector_store()
     raw_documents = _load_docs()
     return FAISS.from_documents(
         [raw_documents[0]],
@@ -49,6 +62,7 @@ def _build_pg_vector_store() -> VectorStore:
         documents=[raw_documents[0]],
         collection_name=settings.vector_store_conn_name,
         connection=settings.db_conn_string(),
+        pre_delete_collection=True,
         use_jsonb=True,
     )
 
@@ -72,7 +86,7 @@ def _load_pg_vector_store(embeddings: Embeddings) -> PGVector:
 
 def _load_local_vector_store(embeddings: Embeddings) -> FAISS:
     return FAISS.load_local(
-        settings.vector_store_path,
+        settings.vector_store_folder,
         embeddings,
         allow_dangerous_deserialization=True,
         normalize_L2=True,
@@ -104,6 +118,5 @@ def ingest_documents() -> None:
     if settings.storage is Storage.LOCAL:
         logger.debug("Saving vector store")
         assert type(vector_store) == FAISS
-        vector_store.save_local(settings.vector_store_path)
+        vector_store.save_local(settings.vector_store_folder)
     logger.debug("Document ingestion complete")
-    
