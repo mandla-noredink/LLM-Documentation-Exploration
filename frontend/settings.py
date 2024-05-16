@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     query_endpoint: str = "/query/stream_events/"
     search_endpoint: str = "/search/invoke/"
     feedback_endpoint: str = "/feedback/"
+    upload_endpoint: str = "/upload/"
     default_mode: Mode = Mode.CHATBOT
 
     min_num_sources: int = 2
