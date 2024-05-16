@@ -69,6 +69,8 @@ class ParentDocumentPreprocessRetriever(MultiVectorRetriever):
         for i, doc in enumerate(documents):
             _id = doc_ids[i]
             sub_docs = self.child_splitter.split_documents([doc])
+
+            # NOTE: Preprocessing step added to class to enable vector store retrieval optimization
             sub_docs = [preprocess_document(doc) for doc in sub_docs]
             if self.child_metadata_fields is not None:
                 for _doc in sub_docs:
