@@ -14,6 +14,8 @@ The LLM Documentation Explorer is a sophisticated application designed to browse
 
 ## Architecture
 
+![Lucidchart Blank Diagram](https://github.com/mandla-noredink/LLM-Documentation-Exploration/assets/99652839/36bc8f27-899f-41a7-bcbd-e45398edd393)
+
 ### Core RAG pipeline
 
 The core RAG implementation allows for either local or remote operation. Local operation saves a FAISS vector store to a local file, running it in memory. Remote operation saves the vector database to a PostgreSQL database using the PGVector extension.
