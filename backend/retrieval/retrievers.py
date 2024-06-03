@@ -62,8 +62,8 @@ def get_reranker_retriever(
     # https://python.langchain.com/v0.1/docs/integrations/retrievers/flashrank-reranker/
 
     base_retriever = get_base_retriever(vector_store)
-    ranker = Ranker(model_name=settings.flashrank_model_name)
-    compressor = FlashrankRerank(client=ranker, model=settings.flashrank_model_name)
+    ranker = Ranker(model_name=settings.flashrank_model_name, cache_dir=".opt")
+    compressor = FlashrankRerank(client=ranker)
     compressor.top_n = top_n or settings.default_reranked_top_n
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=base_retriever
