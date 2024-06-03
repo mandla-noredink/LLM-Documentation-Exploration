@@ -1,11 +1,12 @@
 from enum import Enum
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from logging.config import dictConfig
 from pathlib import Path
 import logging
 import os
 
+_DOTENV_PATH = Path(__file__).parent.joinpath(".env")
 _BASE_FOLDER = os.path.dirname(os.path.realpath(__file__))
 _LOG_FOLDER = ".logs/"
 _LOG_PACKAGE_BLOCKLIST = [
@@ -108,6 +109,8 @@ class Settings(BaseSettings):
 
     # Vector DB selection
     storage: Storage = Storage.REMOTE
+
+    model_config = SettingsConfigDict(env_file=_DOTENV_PATH)
 
     def db_conn_string(self):
         return f"postgresql+psycopg://{self.pg_user}:{self.pg_password}@{self.pg_host}:{self.pg_port}/{self.pg_dbname}"
