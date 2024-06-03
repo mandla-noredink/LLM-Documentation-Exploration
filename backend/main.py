@@ -12,6 +12,7 @@ from utils import unzip, create_folder, clear_folder
 from ingestion.ingest import ingest_documents
 from retrieval.chains import answer_chain, search_chain
 from settings import settings, get_logger
+from local_settings import LANGCHAIN_API_KEY
 
 class Query(BaseModel):
     question: str
@@ -26,7 +27,7 @@ class SendFeedbackBody(BaseModel):
     comment: Optional[str] = None
 
 logger = get_logger(__name__)
-client = Client()
+client = Client(api_key=LANGCHAIN_API_KEY)
 app = FastAPI()
 
 # Set all CORS enabled origins

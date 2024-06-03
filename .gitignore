@@ -10,3 +10,6 @@ __pycache__
 .docstore
 datasets/
 info.log
+documents.zip
+local_settings*
+poetry-llm-env/

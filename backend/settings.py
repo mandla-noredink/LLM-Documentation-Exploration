@@ -5,6 +5,7 @@ from logging.config import dictConfig
 from pathlib import Path
 import logging
 import os
+from local_settings import PG_HOST, PG_PORT, PG_USER, PG_PASSWORD, PG_DBNAME
 
 _DOTENV_PATH = Path(__file__).parent.joinpath(".env")
 _BASE_FOLDER = os.path.dirname(os.path.realpath(__file__))
@@ -97,11 +98,11 @@ class Settings(BaseSettings):
     child_chunk_overlap: int = 100
 
     # For PG Vector Store
-    pg_host: str = "pg_host"
-    pg_port: str = "pg_port"
-    pg_user: str = "pg_user"
-    pg_password: str = "pg_password"
-    pg_dbname: str = "pg_dbname"
+    pg_host: str = PG_HOST
+    pg_port: str = PG_PORT
+    pg_user: str = PG_USER
+    pg_password: str = PG_PASSWORD
+    pg_dbname: str = PG_DBNAME
 
     vector_store_conn_name: str = "llm_doc_exp__vectors"
     doc_store_conn_name: str = "llm_doc_exp__documents"
