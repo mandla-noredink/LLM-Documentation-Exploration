@@ -7,7 +7,8 @@ import logging
 import os
 from local_settings import PG_HOST, PG_PORT, PG_USER, PG_PASSWORD, PG_DBNAME
 
-_DOTENV_PATH = Path(__file__).parent.joinpath(".env")
+_DOTENV_PATH = Path(__file__).parent.parent.joinpath(".env")
+print(_DOTENV_PATH)
 _BASE_FOLDER = os.path.dirname(os.path.realpath(__file__))
 _LOG_FOLDER = ".logs/"
 _LOG_PACKAGE_BLOCKLIST = [
@@ -107,6 +108,14 @@ class Settings(BaseSettings):
     vector_store_conn_name: str = "llm_doc_exp__vectors"
     doc_store_conn_name: str = "llm_doc_exp__documents"
     flashrank_model_name: str = "ms-marco-MiniLM-L-12-v2"
+
+    langchain_tracing_v2: bool = True
+    langchain_project: str = "llm-docs-explorer"
+    langchain_api_key: str
+
+    log_level: str = "INFO"
+
+
 
     # Vector DB selection
     storage: Storage = Storage.REMOTE
