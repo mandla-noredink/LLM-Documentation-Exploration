@@ -14,6 +14,7 @@ next(wn.all_synsets())
 
 
 def pre_embedding_process(text: str) -> str:
+    # NOTE: I (Wes) haven't seen advantages reported when tokenizing and lemmatizing documents before embedding. Not saying it's wrong, but curious where you got this inspiration from?
     # Tokenization
     cleaned_tokens = re.sub(r"[_\-]", " ", text)
     tokens = word_tokenize(text)

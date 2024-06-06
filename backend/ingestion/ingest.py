@@ -76,6 +76,7 @@ def _build_vector_store() -> VectorStore:
 
 
 def _load_pg_vector_store(embeddings: Embeddings) -> PGVector:
+    # NOTE: It seems like this already handles storing some metadata, like the document id and source.
     return PGVector(
         embeddings=embeddings,
         collection_name=settings.vector_store_conn_name,
