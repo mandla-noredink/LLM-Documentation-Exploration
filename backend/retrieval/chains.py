@@ -11,6 +11,7 @@ from langchain_core.runnables import (Runnable, RunnableLambda,
 from retrieval.retrievers import get_reranker_retriever
 from retrieval.stuff_refine_documents_chain import \
     create_stuff_refine_documents_chain
+from retrieval.llm import llm
 from settings import settings
 
 # https://github.com/langchain-ai/langchain/issues/14191
@@ -36,7 +37,9 @@ def _get_documents_chain(llm, query: str, optimize: bool) -> Runnable[Dict[str, 
         template=PROMPT, input_variables=["context", "question"]
     )
     if optimize:
+        print("Optimizing")
         return create_stuff_refine_documents_chain(llm, custom_prompt, query)
+    print("Not Optimizing")
     return create_stuff_documents_chain(llm, custom_prompt)
 
 

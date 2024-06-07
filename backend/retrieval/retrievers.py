@@ -15,6 +15,8 @@ from retrieval.parent_document_preprocess_retriever import (
     ParentDocumentPreprocessRetriever,
 )
 from settings import Storage, settings
+from retrieval.llm_compressor import LLMCompressor
+from retrieval.llm import llm
 
 
 def _get_splitter(is_parent: bool) -> TextSplitter:
@@ -63,55 +65,56 @@ def get_reranker_retriever(
 
     base_retriever = get_base_retriever(vector_store)
     ranker = Ranker(model_name=settings.flashrank_model_name, cache_dir=".opt")
-    compressor = FlashrankRerank(client=ranker)
-    compressor.client = ranker
-    compressor.top_n = top_n or settings.default_reranked_top_n
+    # compressor = FlashrankRerank(client=ranker)
+    # compressor.client = ranker
+    # compressor.top_n = top_n or settings.default_reranked_top_n
+    compressor = LLMCompressor(llm=llm)
     compression_retriever = ContextualCompressionRetriever(
         base_compressor=compressor, base_retriever=base_retriever
     )
 
     return compression_retriever
 
-from langchain_core.prompts import ChatPromptTemplate
+# from langchain_core.prompts import ChatPromptTemplate
 
-rerank_system_prompt = '''You are an Assistant responsible for helping detect whether the retrieved context is relevant to the engineering question. For a given input, you need to output a single token: "Yes" or "No" indicating the retrieved content is relevant to the engineering question. Examples are below:
+# rerank_system_prompt = '''You are an Assistant responsible for helping detect whether the retrieved context is relevant to the engineering question. For a given input, you need to output a single token: "Yes" or "No" indicating the retrieved content is relevant to the engineering question. Examples are below:
 
-Engineering Question: What caused the merge fire?
-Context: """Jenkins was unable to coordinate merges and was throwing out memory errors. This caused multiple days of merge queue outages."""
-Relevant: Yes
+# Engineering Question: What caused the merge fire?
+# Context: """Jenkins was unable to coordinate merges and was throwing out memory errors. This caused multiple days of merge queue outages."""
+# Relevant: Yes
 
-Engineering Question: What caused the merge fire?
-Context: """Question ID 15232 was reported as taking more than 60 seconds to submit. I'm making a pull request to stop showing new topics."""
-Relevant: No
+# Engineering Question: What caused the merge fire?
+# Context: """Question ID 15232 was reported as taking more than 60 seconds to submit. I'm making a pull request to stop showing new topics."""
+# Relevant: No
 
-Engineering Question: What can we do if the database maxes out CPU resources?
-Context: """The quiz engine is the largest consumer of database resources, so reducing its resources is the main way to reduce database load."""
-Relevant: Yes
+# Engineering Question: What can we do if the database maxes out CPU resources?
+# Context: """The quiz engine is the largest consumer of database resources, so reducing its resources is the main way to reduce database load."""
+# Relevant: Yes
 
-Engineering Question: What can we do if the database maxes out CPU resources?
-Context: """error: var "firecrackers" is not defined. Question ID 23342352354 unable to perform celebration animation. root/directory/jobs/haskell_in_ruby."""
-Relevant: No'''
+# Engineering Question: What can we do if the database maxes out CPU resources?
+# Context: """error: var "firecrackers" is not defined. Question ID 23342352354 unable to perform celebration animation. root/directory/jobs/haskell_in_ruby."""
+# Relevant: No'''
 
-rerank_user_prompt = '''Engineering Question: {question}
-Context: """{context}"""
-Relevant:
-'''
+# rerank_user_prompt = '''Engineering Question: {question}
+# Context: """{context}"""
+# Relevant:
+# '''
 
-rerank_prompt = ChatPromptTemplate.from_messages([
-    ("system", rerank_system_prompt),
-    ("user", rerank_user_prompt)
-])
+# rerank_prompt = ChatPromptTemplate.from_messages([
+#     ("system", rerank_system_prompt),
+#     ("user", rerank_user_prompt)
+# ])
 
-def get_relevant_contexts(llm, question, contexts, rerank_prompt=rerank_prompt):
-    """Pass question and contexts to llm to get reranked context using LLM as decider of relevance"""
-    final_contexts = []
-    for context in contexts:
-        chain = rerank_prompt | llm
-        reply = chain.invoke({'question': question, 'context': context})
-        if reply == 'Yes':
-            final_contexts.append(context)
-    return final_contexts
+# def get_relevant_contexts(llm, question, contexts, rerank_prompt=rerank_prompt):
+#     """Pass question and contexts to llm to get reranked context using LLM as decider of relevance"""
+#     final_contexts = []
+#     for context in contexts:
+#         chain = rerank_prompt | llm
+#         reply = chain.invoke({'question': question, 'context': context})
+#         if reply == 'Yes':
+#             final_contexts.append(context)
+#     return final_contexts
 
-# Path is:
-# "Take user question" -> "Get initial relevant docs from Vector DB" -> "Rerank docs with Yes/No relevance and keep all the Yes" -> Pass retained docs in as context to LLM for final question
-# But I can't find out how to fit into the infrastructure with the ContextualCompressionRetriever and RunnablePassthrough's
+# # Path is:
+# # "Take user question" -> "Get initial relevant docs from Vector DB" -> "Rerank docs with Yes/No relevance and keep all the Yes" -> Pass retained docs in as context to LLM for final question
+# # But I can't find out how to fit into the infrastructure with the ContextualCompressionRetriever and RunnablePassthrough's
